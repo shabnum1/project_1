@@ -1,38 +1,97 @@
 const authorModel = require("../models/authorModel")
 const jwt = require("jsonwebtoken");
+const validate = require("validator")
+
+
+const isValid = (value) => {
+
+  if (typeof value === 'undefined' || value === null) return false
+
+  if (typeof value === 'string' && value.trim().length === 0) {
+    return false
+  }
+    return true
+
+}
+
+
+const isValidTitle = (title) => {
+  return ['Mr', 'Mrs', 'Miss', 'Mast'].indexOf(title) !== -1
+}
+
+const isValidRequestBody = (requestBody) => {
+  return Object.keys(requestBody).length > 0
+}
 
 // ----------------------------------------- CREATE AUTHOR ---------------------------------------------------------
 
+
 const createAuthor = async function (req, res) {
   try {
-    let author_data = req.body
 
     //--------------------------  Getting data from body  -------------------------------------
-    if (!author_data) {
-      return res.status(400).send({ status: false, msg: "Invalid request ,Please provide author details" })
-    }
-    // -------------------------- Checking for all the firelds --------------------------------
-    if (!author_data.fname) {
-      return res.status(400).send({ status: false, msg: "fname is required" })
-    }
-    if (!author_data.lname) {
-      return res.status(400).send({ status: false, msg: "lname is required" })
-    }
-    if (!author_data.title) {
-      return res.status(400).send({ status: false, msg: "title is required" })
-    }
-    if (!author_data.email) {
-      return res.status(400).send({ status: false, msg: "email is required" })
-    }
-    if (!author_data.password) {
-      return res.status(400).send({ status: false, msg: "password is required" })
-    }
+    let requestBody = req.body;
 
-    let authorCreated = await authorModel.create(author_data)
-    res.status(201).send({ status: true, Message: "New author created successfully", author_data: authorCreated })
-  } catch (error) {
-    res.status(500).send({ status: false, Error: "Author already exists" })
-  }
+    if (!isValidRequestBody(requestBody)) {
+      return res.status(400).send({ status: false, msg: "invalid request parameters . Please Provide Author Details" })
+    }
+    // -------------------------- Checking for all the fields --------------------------------
+    
+ ////--------- Extracting Params------------ ////
+
+ const { fname, lname, title, email, password } = requestBody;
+
+ ////------------Validating------////
+
+ if (!isValid(fname)) {
+   res.status(400).send({ Status: false, message: "First Name is required" })
+   return
+ }
+
+ if (!isValid(lname)) {
+   res.status(400).send({ Status: false, message: "Last Name is required" })
+   return
+ }
+
+ if (!isValid(title)) {
+   res.status(400).send({ Status: false, message: "Title is required" })
+   return
+ }
+
+ if (!isValidTitle(title)) {
+   res.status(400).send({ Status: false, message: "Title Should Be Among Mr , Mrs , Miss And Mast" })
+   return
+ }
+
+ if (!isValid(email)) {
+   res.status(400).send({ Status: false, message: "Email is required" })
+   return
+ }
+
+ if (!validate.isEmail(email)) {
+   return res.status(400).send({ status: false, msg: "Invalid Email" })
+ }
+
+ if (!isValid(password)) {
+   res.status(400).send({ Status: false, message: "Password Is Required" })
+   return
+ }
+
+ 
+ const isEmailAlreadyUsed = await authorModel.findOne( { email } );
+
+ if (isEmailAlreadyUsed) {
+   res.status(400).send({ Status: false, message: `${email} is Already Registerd` })
+   return
+ }
+
+ let authorCreated = await authorModel.create(requestBody)
+ res.status(201).send({ status: true, Message: "New author created successfully", requestBody: authorCreated })
+
+} catch (err) {
+  res.status(500).send( { Status: false, message: err.message } )
+}
+
 }
 
 // ----------------------------------------- GET AUTHOR ------------------------------------------------------------
