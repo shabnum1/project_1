@@ -6,10 +6,10 @@ const app = express();
 
 app.use(bodyParser.json());
 
-
-mongoose.connect("mongodb+srv://functionup-cohort:P8qVpKuqjaLAhMJT@cluster0.ahfdt.mongodb.net/group2Database-db", {
+mongoose.connect("mongodb+srv://huda123:MaZjaXxcN2lw6iVV@cluster0.je5ld.mongodb.net/project1blogWebsite-db", {
     useNewUrlParser: true
 })
+
     .then(() => console.log("MongoDb is connected"))
     .catch(err => console.log(err))
 
