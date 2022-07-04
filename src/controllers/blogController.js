@@ -156,8 +156,8 @@ const updateBlog = async function (req, res) {
 
         if (Object.keys(blogData).length == 0)
             return res.status(404).send({ status: false, msg: "Body is required" });
-
-        console.log("Here")
+            
+      
         let blog = await blogModel.findOneAndUpdate({ _id: blogId, isDeleted: false },
             {
                 $set: { isPublished: true, body: blogData.body, title: blogData.title, publishedAt: new Date() },
