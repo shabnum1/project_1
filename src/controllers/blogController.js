@@ -156,7 +156,7 @@ const updateBlog = async function (req, res) {
 
         if (Object.keys(blogData).length == 0)
             return res.status(404).send({ status: false, msg: "Body is required" });
-            
+
       
         let blog = await blogModel.findOneAndUpdate({ _id: blogId, isDeleted: false },
             {
@@ -195,7 +195,7 @@ const deleteBlog = async function (req, res) {
 const deleteQueryParams = async function (req, res) {
     try {
         const data = req.query
-        const filterQuery = { isDeleted: false, deletedAt: null } // base condtion
+        const filterQuery = { isDeleted: false} // base condtion
         //console.log(data)
 
         if (Object.keys(data).length == 0) {
@@ -219,7 +219,7 @@ const deleteQueryParams = async function (req, res) {
             filterQuery["isPublished"] = isPublished
         }
 
-        //console.log(filterQuery)
+        console.log(filterQuery)
 
 
         const deletedBlogs = await blogModel.find(filterQuery)
@@ -230,14 +230,16 @@ const deleteQueryParams = async function (req, res) {
         const blogAuth = deletedBlogs.filter((blog) => {                         // authorisation using filter
             if (blog.authorId == req.loggedInAuthorId)
                 return blog._id
-            else
+                else
                 return res.status(404).send({ status: false, msg: "User is not authorised to do changes" })
         })
+        
+        if (blogAuth.length === 0)
+        return res.status(404).send({ status: false, msg: "No blog found" })
 
+         await blogModel.updateMany({ _id: { $in: deletedBlogs } }, { $set: { isDeleted: true, deletedAt: new Date() } })
 
-        const deletedBlogs1 = await blogModel.updateMany({ _id: { $in: deletedBlogs } }, { $set: { isDeleted: true, deletedAt: new Date() } })
-
-        // console.log(deletedBlogs1)
+         //console.log(deletedBlogs1)
 
 
         return res.status(201).send({ status: true, msg: "Blogs Deleted Successfully" })
