@@ -16,7 +16,7 @@ const authentication = function (req, res, next) {
       if(error)
       return res.status(401).send({ status: false, msg: "token is invalid" });
       req.loggedInAuthorId = decodedToken._id
-
+     
     });   // verifying token with secret key present in author login
 
     // if (!decodedToken)

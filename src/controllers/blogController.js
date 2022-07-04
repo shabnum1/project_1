@@ -26,7 +26,7 @@ const createBlog = async function (req, res) {
     try {
         let blog = req.body
 
-        const { title, body, authorId, category} = blog
+        const { title, body, authorId, category } = blog
 
 
         const authorIdFromToken = req.loggedInAuthorId
@@ -96,46 +96,51 @@ const createBlog = async function (req, res) {
 const getBlog = async function (req, res) {
 
     try {
+        
         const data = req.query
-        const filterQuery = { isDeleted : false , deletedAt : null , isPublished : true }
+        const filterQuery = { isDeleted: false,isPublished: true }
 
-        if (isValidRequestBody(data)) {
-        const {  authorId, category , tags, subcategory } = data
+        if (Object.keys(data) == 0) {
 
-        if (isValid(authorId) && isValidObjectId(authorId) ) {
+            let blog = await blogModel.find(filterQuery)
+            if (blog.length == 0) return res.status(404).send({ status: false, msg: "No Blog Found!!! or it may be deleted " })
+            return res.status(200).send({ status: true, msg: blog })
+          } 
+        
+
+        const { authorId, category, tags, subcategory } = data
+
+        if (isValid(authorId) && isValidObjectId(authorId)) {
             filterQuery['authorId'] = authorId
         }
-
+    
         if (isValid(category)) {
-            filterQuery['category'] = category.trim()
+            filterQuery['category'] = category
         }
 
         if (isValid(tags)) {
-
-            const tagsArr = tags.trim().split(',').map(tag => tag.trim());
-            filterQuery['tags'] = { $all : tagsArr }
+            filterQuery['tags'] = tags
 
         }
 
 
         if (isValid(subcategory)) {
-
-            const subcatArr = subcategory.trim().split(',').map(subcategory => subcategory.trim());
-            filterQuery['subcategory'] = { $all : subcatArr }
-
+            filterQuery['subcategory'] = subcategory
         }
-    }
-    
+
+        console.log(filterQuery)
 
         //Validating data is empty or not
-       
-            const blog = await blogModel.find(filterQuery)
-            if (blog.length == 0) {
-                return res.status(404).send({ status: false, msg: "Blog doesn't Exists, field is required." })
-            }
-            res.status(200).send({ status: true, data: blog })
 
+        const getBlog = await blogModel.find(filterQuery)
+        console.log(getBlog)
         
+        if (getBlog.length===0) {
+            return res.status(404).send({ status: false, msg: "No such blog exist" })
+        }
+        return res.status(200).send({ status: true, data: getBlog })
+
+
     } catch (error) {
         res.status(500).send({ status: false, Error: error.message })
     }
@@ -179,7 +184,7 @@ const deleteBlog = async function (req, res) {
         }
         //.send({status: true, msg: deletedBlog})
         let deletedBlog = await blogModel.findOneAndUpdate({ _id: blogId }, { isDeleted: true, deletedAt: new Date() }, { new: true })
-        res.status(201).send({ status: true, data: deletedBlog })
+        res.status(200).send({ status: true, data: deletedBlog })
     } catch (error) {
         res.status(500).send({ status: false, Error: error.message })
     }
@@ -218,6 +223,7 @@ const deleteQueryParams = async function (req, res) {
 
 
         const deletedBlogs = await blogModel.find(filterQuery)
+        console.log(deletedBlogs)
         if (deletedBlogs.length === 0) {
             return res.status(404).send({ status: false, error: "Blog is empty" })
         }
